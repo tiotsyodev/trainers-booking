@@ -1,0 +1,34 @@
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  booking-service:
+    build: 
+      context: ..
+      dockerfile: booking-service/Dockerfile
+    ports:
+      - "50051:${GRPC_PORT}"
+    environment:
+      - DB_HOST=postgres
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy  
+    restart: always
+
+volumes:
+  postgres_data:

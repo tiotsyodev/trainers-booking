@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package trainer.v1;
+
+option go_package = "booker/gen/trainer/v1;trainerv1";
+
+service TrainerService {
+    rpc CreateTrainer(CreateTrainerRequest) returns (CreateTrainerResponse);
+    rpc DeleteTrainer(DeleteTrainerRequest) returns (DeleteTrainerResponse);
+    rpc GetTrainer(GetTrainerRequest) returns (GetTrainerResponse);
+    rpc GetAllTrainers(GetAllTrainersRequest) returns (GetAllTrainersResponse);
+
+    rpc SetWorkingHours(SetWorkingHoursRequest) returns (SetWorkingHoursResponse);
+    rpc GetWorkingHours(GetWorkingHoursRequest) returns (GetWorkingHoursResponse);
+}
+
+message DaySchedule {
+    int32 day_of_week = 1; // 0=Sunday ... 6=Saturday
+    string start_time = 2; // "09:00"
+    string end_time = 3;   // "18:00"
+    int32 session_duration_minutes = 4;
+}
+
+message SetWorkingHoursRequest {
+    string trainer_id = 1;
+    repeated DaySchedule days = 2;
+}
+
+message SetWorkingHoursResponse {
+    repeated DaySchedule days = 1;
+}
+
+message GetWorkingHoursRequest {
+    string trainer_id = 1;
+}
+
+message GetWorkingHoursResponse {
+    repeated DaySchedule days = 1;
+}
+
+message GetAllTrainersRequest {
+    string page_token = 1;
+    int32 page_size = 2;
+}
+
+message GetAllTrainersResponse {
+    repeated Trainer trainers = 1;
+    string next_page_token = 2;
+}
+
+message CreateTrainerRequest {
+    string name = 1;
+    string specialization = 2;
+}
+
+message CreateTrainerResponse {
+    Trainer trainer = 1;
+}
+
+message DeleteTrainerRequest {
+    string id = 1;
+}
+
+message DeleteTrainerResponse {}
+
+message GetTrainerRequest {
+    string id = 1;
+}
+
+message GetTrainerResponse {
+    Trainer trainer = 1;
+}
+
+message Trainer {
+    string id = 1;
+    string name = 2;
+    string specialization = 3;
+}
+
