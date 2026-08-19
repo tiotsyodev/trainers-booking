@@ -1,6 +1,7 @@
-package postgres
+﻿package postgres
 
 import (
+	"booker/booking-service/internal/domain"
 	"context"
 	"fmt"
 	"time"
@@ -44,3 +45,5 @@ func NewConnPool(ctx context.Context, cfg Config) (Repo, error) {
 
 	return Repo{Pool: dbpool, TimeoutOperation: cfg.Timeout}, nil
 }
+
+var _ domain.Repository = (*Repo)(nil)

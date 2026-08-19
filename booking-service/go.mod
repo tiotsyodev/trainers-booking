@@ -1,4 +1,4 @@
-module booker/trainer-service
+module booker/booking-service
 
 go 1.26.4
 

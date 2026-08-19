@@ -1,4 +1,4 @@
-package domain
+﻿package domain
 
 import (
 	"context"
@@ -24,6 +24,11 @@ type TimeRange struct {
 type WorkingHoursRepo interface {
 	SetWorkingHours(ctx context.Context, trainerID uuid.UUID, hours []WorkingHours) error
 	GetWorkingHours(ctx context.Context, trainerID uuid.UUID) ([]WorkingHours, error)
+}
+
+type DayAvailability struct {
+	Date      time.Time
+	Available bool
 }
 
 func (w *WorkingHours) Validate() error {
