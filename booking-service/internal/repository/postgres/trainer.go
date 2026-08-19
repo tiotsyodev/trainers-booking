@@ -1,7 +1,7 @@
-package postgres
+﻿package postgres
 
 import (
-	"booker/trainer-service/internal/domain"
+	"booker/booking-service/internal/domain"
 	"context"
 	"errors"
 	"fmt"

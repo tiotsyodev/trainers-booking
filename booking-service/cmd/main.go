@@ -1,9 +1,11 @@
-package main
+﻿package main
 
 import (
+	slotv1 "booker/gen/slot/v1"
 	trainerv1 "booker/gen/trainer/v1"
-	"booker/trainer-service/internal/repository/postgres"
-	grpcTransport "booker/trainer-service/internal/transport/grpc"
+	"booker/booking-service/internal/repository/postgres"
+	"booker/booking-service/internal/service"
+	grpcTransport "booker/booking-service/internal/transport/grpc"
 	"context"
 	"log"
 	"net"
@@ -32,11 +34,14 @@ func main() {
 	}
 	defer pool.Close()
 
-	handler := grpcTransport.NewTrainerHandler(&pool, &pool)
+	slotSvc := service.NewSlotService(&pool, &pool)
+
+	trainerHandler, slotHandler := grpcTransport.NewTrainerHandler(&pool, &pool), grpcTransport.NewSlotHandler(slotSvc)
 
 	server := grpc.NewServer(grpc.UnaryInterceptor(recovery.UnaryServerInterceptor()))
 
-	trainerv1.RegisterTrainerServiceServer(server, handler)
+	trainerv1.RegisterTrainerServiceServer(server, trainerHandler)
+	slotv1.RegisterSlotServiceServer(server, slotHandler)
 
 	lis, err := net.Listen("tcp", ":"+grpcConfig.Port)
 	if err != nil {

@@ -1,8 +1,8 @@
-package grpc
+﻿package grpc
 
 import (
 	trainerv1 "booker/gen/trainer/v1"
-	"booker/trainer-service/internal/domain"
+	"booker/booking-service/internal/domain"
 	"context"
 	"encoding/base64"
 	"errors"

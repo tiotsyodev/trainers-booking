@@ -1,7 +1,7 @@
-package postgres
+﻿package postgres
 
 import (
-	"booker/trainer-service/internal/domain"
+	"booker/booking-service/internal/domain"
 	"context"
 	"errors"
 	"fmt"
@@ -61,3 +61,5 @@ func (r *Repo) SetWorkingHours(ctx context.Context, trainerID uuid.UUID, working
 
 	return tx.Commit(ctx)
 }
+
+var _ domain.WorkingHoursRepo = (*Repo)(nil)

@@ -1,7 +1,7 @@
-package postgres
+﻿package postgres
 
 import (
-	"booker/trainer-service/internal/domain"
+	"booker/booking-service/internal/domain"
 	"context"
 	"errors"
 	"fmt"
@@ -11,9 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-// Занять слот
-
-func (r *Repo) BookSlot(ctx context.Context, clientID, trainerID uuid.UUID, timeRange domain.TimeRange) (*domain.Slot, error) {
+func (r *Repo) BookSlot(ctx context.Context, clientID, trainerID uuid.UUID, timeRange *domain.TimeRange) (*domain.Slot, error) {
 
 	query := "INSERT INTO slot (start_time, end_time, trainer_id, client_id) VALUES ($1, $2, $3, $4) RETURNING id, status"
 
@@ -86,5 +84,3 @@ func (r *Repo) ListBooked(ctx context.Context, trainerID uuid.UUID, from, to tim
 }
 
 var _ domain.SlotRepo = (*Repo)(nil)
-
-// Выдать свободные
