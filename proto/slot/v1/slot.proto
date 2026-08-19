@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package slot.v1;
+
+option go_package = "booker/gen/slot/v1;slotv1";
+
+service SlotService {
+    rpc BookSlot(BookSlotReq) returns (BookSlotRes);
+    rpc CancelSlot(CancelSlotReq) returns (CancelSlotRes);
+    rpc ListAvailableSlots(ListAvailableSlotsReq) returns (ListAvailableSlotsRes);
+    rpc GetCalendar(GetAvailabilityCalendarReq) returns (GetAvailabilityCalendarRes);
+}
+
+message TimeRange {
+    string start = 1; // RFC3339: "2026-08-17T10:00:00Z"
+    string end = 2;
+}
+
+message Slot {
+    string id = 1;
+    string client_id = 2;
+    string trainer_id = 3;
+    string start_time = 4;
+    string end_time = 5;
+    string status = 6; 
+}
+
+message DayAvailability {
+    string date = 1;
+    bool available = 2;
+}
+
+message GetAvailabilityCalendarReq {
+    string trainer_id = 1;
+    string date_from = 2;
+    string date_to = 3;
+}
+
+message GetAvailabilityCalendarRes{
+    repeated DayAvailability days = 1;
+}
+
+message BookSlotReq {
+    string client_id = 1;
+    string trainer_id = 2;
+    string start_time = 3; // RFC3339: "2026-08-17T10:00:00Z"
+}
+
+message BookSlotRes {
+    Slot slot = 1;
+}
+
+message CancelSlotRes {}
+
+message CancelSlotReq {
+    string slot_id = 1;
+}
+
+message ListAvailableSlotsRes {
+    repeated TimeRange time_range = 1;
+}
+
+message ListAvailableSlotsReq {
+    string trainer_id = 1;
+    string date = 2; // "2026-08-17"
+}
