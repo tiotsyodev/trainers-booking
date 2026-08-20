@@ -177,7 +177,18 @@ func (avs *SlotSvc) Book(ctx context.Context, clientID, trainerID uuid.UUID, sta
 		return nil, fmt.Errorf("%w: no such slot", domain.ErrInvalidArgument)
 	}
 
-	return avs.slotRepo.BookSlot(ctx, clientID, trainerID, match)
+	// event
+
+	ev := domain.SlotBooked{
+		EventId:    uuid.New(),
+		ClientID:   clientID,
+		TrainerID:  trainerID,
+		SlotID:     uuid.New(),
+		OccurredAt: time.Now(),
+		Start:      match.Start,
+		End:        match.End,
+	}
+	return avs.slotRepo.BookSlot(ctx, clientID, trainerID, match, ev)
 }
 
 func (avs *SlotSvc) CancelSlot(ctx context.Context, slotID uuid.UUID) error {

@@ -2,24 +2,52 @@
 
 import (
 	"booker/booking-service/internal/domain"
+	eventsv1 "booker/gen/events/v1"
 	"context"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func (r *Repo) BookSlot(ctx context.Context, clientID, trainerID uuid.UUID, timeRange *domain.TimeRange) (*domain.Slot, error) {
+func (r *Repo) BookSlot(ctx context.Context, clientID, trainerID uuid.UUID, timeRange *domain.TimeRange, ev domain.SlotBooked) (*domain.Slot, error) {
 
-	query := "INSERT INTO slot (start_time, end_time, trainer_id, client_id) VALUES ($1, $2, $3, $4) RETURNING id, status"
+	pbEvent := eventsv1.Event{
+		EventId:   ev.EventId.String(),
+		OccuredAt: timestamppb.New(ev.OccurredAt),
+		Payload: &eventsv1.Event_SlotBooked{
+			SlotBooked: &eventsv1.SlotBooked{
+				SlotId:    ev.SlotID.String(),
+				TrainerId: ev.TrainerID.String(),
+				ClientId:  ev.ClientID.String(),
+				StartTime: timestamppb.New(ev.Start),
+				EndTime:   timestamppb.New(ev.End),
+			},
+		},
+	}
 
-	var slot domain.Slot
-
-	err := r.QueryRow(ctx, query, timeRange.Start, timeRange.End, trainerID, clientID).Scan(&slot.ID, &slot.Status)
+	data, err := proto.Marshal(&pbEvent)
 	if err != nil {
+		return nil, fmt.Errorf("marshal event: %w", err)
+	}
 
+	// Init tx
+	tx, err := r.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Booking Slot
+	bookQuery := "INSERT INTO slot (id, start_time, end_time, trainer_id, client_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, status"
+	var slot domain.Slot
+	err = tx.QueryRow(ctx, bookQuery, ev.SlotID, timeRange.Start, timeRange.End, trainerID, clientID).Scan(&slot.ID, &slot.Status)
+	if err != nil {
 		if pgErr, ok := errors.AsType[*pgconn.PgError](err); ok {
 			switch pgErr.Code {
 			case "23505":
@@ -28,13 +56,25 @@ func (r *Repo) BookSlot(ctx context.Context, clientID, trainerID uuid.UUID, time
 				return nil, domain.ErrNotFound
 			}
 		}
-
 		return nil, fmt.Errorf("unable to book slot: %w", err)
 	}
+
+	// Create Event
+	eventQuery := "INSERT INTO outbox_events (id, partition_key, payload) VALUES ($1, $2, $3)"
+	_, err = tx.Exec(ctx, eventQuery, ev.EventId, ev.SlotID.String(), data)
+	if err != nil {
+		return nil, fmt.Errorf("save outbox event: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
+
 	slot.ClientID = clientID
 	slot.TrainerID = trainerID
 	slot.StartTime = timeRange.Start
 	slot.EndTime = timeRange.End
+
 	return &slot, nil
 
 }

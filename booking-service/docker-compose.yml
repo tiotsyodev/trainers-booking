@@ -23,6 +23,7 @@ services:
       - "50051:${GRPC_PORT}"
     environment:
       - DB_HOST=postgres
+      - KAFKA_BROKERS = kafka-0:9091
     env_file:
       - .env
     depends_on:
@@ -35,9 +36,9 @@ services:
       - ./migrations:/migrations
     command: [
       "-path", "/migrations",
-      "-database", "postgres://${DB_USER}:${DB_PASSWORD}@${DB_USER}:${DB_PORT}/${DB_NAME}?sslmode=disable",
+      "-database", "postgres://${DB_USER}:${DB_PASSWORD}@postgres:${DB_PORT}/${DB_NAME}?sslmode=disable",
       "up"
-    ]
+    ] 
     depends_on:
       postgres:
         condition: service_healthy

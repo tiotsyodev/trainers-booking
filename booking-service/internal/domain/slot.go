@@ -17,7 +17,7 @@ type Slot struct {
 }
 
 type SlotRepo interface {
-	BookSlot(ctx context.Context, ClientId, TrainerID uuid.UUID, timeRange *TimeRange) (*Slot, error)
+	BookSlot(ctx context.Context, clientID, trainerID uuid.UUID, timeRange *TimeRange, ev SlotBooked) (*Slot, error)
 	ListBooked(ctx context.Context, trainerID uuid.UUID, from, to time.Time) ([]TimeRange, error)
 	Cancel(ctx context.Context, slotID uuid.UUID) error
 }
